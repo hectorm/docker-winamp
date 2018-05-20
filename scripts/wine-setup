@@ -1,0 +1,126 @@
+#!/bin/sh
+
+set -eu
+
+if [ -z "${DISPLAY-}" ]; then
+	Xvfb :99 & xvfb_pid=$!
+	killXvfb() { sleep 2; kill "${xvfb_pid}"; }
+	trap killXvfb EXIT
+	export DISPLAY=:99
+fi
+
+if [ -z "${WINEPREFIX-}" ]; then
+	export WINEPREFIX=~/.wine
+fi
+
+run_reg() {
+	tmpfile=$(mktemp -t 'XXXX.reg')
+	printf -- '%s' "$1" > "${tmpfile}"
+	wine regedit "${tmpfile}"
+	rm "${tmpfile}"
+}
+
+run_ahk() {
+	autohotkey='/tmp/installers/AutoHotkeyU32.exe'
+	if [ ! -f "${autohotkey}" ]; then
+		(cd /tmp/installers/ && unzip /tmp/installers/AutoHotkey_1.1.*.zip \
+			'AutoHotkeyU32.exe' \
+			'WindowSpy.ahk'
+		)
+	fi
+	tmpfile=$(mktemp -t 'XXXX.ahk')
+	printf -- '%s' "$1" > "${tmpfile}"
+	wine "${autohotkey}" "${tmpfile}"
+	rm "${tmpfile}"
+}
+
+########################################################
+# Setup fonts
+# (see: https://wiki.archlinux.org/index.php/Wine#Fonts)
+########################################################
+
+run_reg "$(cat <<-'EOF'
+	REGEDIT4
+
+	[HKEY_CURRENT_USER\Software\Wine\X11 Driver]
+	"ClientSideWithRender"="N"
+EOF
+)"
+
+run_reg "$(cat <<-'EOF'
+	REGEDIT4
+
+	[HKEY_CURRENT_USER\Control Panel\Desktop]
+	"FontSmoothing"="2"
+	"FontSmoothingOrientation"=dword:00000001
+	"FontSmoothingType"=dword:00000002
+	"FontSmoothingGamma"=dword:00000578
+EOF
+)"
+
+find /usr/share/fonts/ \
+	-type f \( -iname \*.ttf -o -iname \*.otf \) \
+	-exec ln -s '{}' "${WINEPREFIX}/drive_c/windows/Fonts" \;
+
+################
+# Install Winamp
+################
+
+WINAMP_INSTALLER_LOCATION=/tmp/installers/winamp295_full_noaod.exe
+WINAMP_INSTALLER_SHA256=$(sha256sum "${WINAMP_INSTALLER_LOCATION}" | awk '{print $1}')
+WINAMP_INSTALLER_EXPECTED_SHA256=a6ae6cffc96921faa476e769c9b913818c1bb2edce281625fdacd6a137c5deef
+
+if [ "${WINAMP_INSTALLER_SHA256}" != "${WINAMP_INSTALLER_EXPECTED_SHA256}" ]; then
+	>&2 printf -- '%s\n' 'Winamp installer checksum mismatch!'
+	>&2 printf -- 'Expected: %s\n' "${WINAMP_INSTALLER_EXPECTED_SHA256}"
+	>&2 printf -- 'Obtained: %s\n' "${WINAMP_INSTALLER_SHA256}"
+	exit 1
+fi
+
+run_ahk "$(cat <<-EOF
+	SetWinDelay 500
+	SetTitleMatchMode, 3
+	SetControlDelay -1
+
+	Run ${WINAMP_INSTALLER_LOCATION}
+
+	WinWait, Winamp Setup: License Agreement
+	ControlClick, Button2, Winamp Setup: License Agreement ; Click "I Agree" button
+
+	WinWait, Winamp Setup: Installation Options
+	ControlFocus, SysTreeView321, Winamp Setup: Installation Options ; Focus "Components" tree
+	Send {Down} ; Select "Winamp Agent" component
+	Send {Space} ; Uncheck "Winamp Agent" component
+	Send {Down} ; Select "Winamp Library" component
+	Send {Down} ; Select "Audio File Support" component
+	Send {Down} ; Select "Video File Support" component
+	Send {Space} ; Uncheck "Video File Support" component
+	Send {Down} ; Select "Visualization" component
+	Send {Down} ; Select "Extra Audio Output Support" component
+	ControlClick, Button2, Winamp Setup: Installation Options ; Click "Next" button
+
+	WinWait, Winamp Setup: Installation Folder
+	ControlClick, Button2, Winamp Setup: Installation Folder ; Click "Install" button
+
+	WinWait, Winamp Setup: Settings
+	ControlClick, Button1, Winamp Setup: Settings ; Click "Next" button
+
+	WinWait, Winamp Setup: User information
+	ControlClick, Button5, Winamp Setup: User information ; Uncheck "Allow anonymous usage statistics" checkbox
+	ControlClick, Button6, Winamp Setup: User information ; Check "Stop bugging me!" checkbox
+	ControlClick, Button1, Winamp Setup: User information ; Click "Next" button
+
+	WinWait, Sending in survey
+	ControlClick, Button1, Sending in survey ; Click "Close" button
+
+	WinWait, Winamp Setup: Winamp successfully installed
+	WinClose, Winamp Setup: Winamp successfully installed
+
+	WinWaitClose
+EOF
+)"
+
+if [ ! -f "${WINEPREFIX}/drive_c/Program Files/Winamp/winamp.exe" ]; then
+	>&2 printf -- '%s\n' 'Winamp installation failed!'
+	exit 1
+fi

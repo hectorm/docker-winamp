@@ -1,4 +1,28 @@
 installers:
+  - AutoHotkey_1.1.28.02.zip:
+      md5: 62f41dae05c5cc442372adfe0f0f3cd1
+      sha1: 8c49206fbb032f761c4d69e2e7829d7cb8c65538
+      sha256: 505fdac9dfd2cc81f0d8cda9347bfd7ce8bb8c77250d5e885905d536feb6df46
+  - Jump_to_File_Extra_v1_33_(Build_1216).exe:
+      md5: fef34661abe28ac2d4006a4ce3c71ba5
+      sha1: fbf704cef905639574ced16b5aad24f5ccd7c119
+      sha256: 35c1db977f00bc81b49024f656b1e71600d60f626011f08d9037b419ad7f6bbe
+  - MilkDrop_104.exe:
+      md5: 76a9417ef97d327b4783b32ec3da09e4
+      sha1: 8466620ad23eb178b9ab55180b7fb648a0be4042
+      sha256: 2111940711cc3a426714ea81797931a739d68b1bf541002ed9f639795fd68318
+  - favorite_presets_2013_12.zip:
+      md5: ad9e4e821f13c198a314999aac478fa1
+      sha1: b0c00b6202e4a0fb7e98ee3a154234eafdb202df
+      sha256: 010f32b5e37dde153e0b1d13f54bcbcf14fb5fe72f7b66bac2223b62dc26fedf
+  - in_mp3__4_103__winamp5666_3512.exe:
+      md5: 3611b71dc1ed3763a210c7605b275229
+      sha1: c0fb444a08b689b3aa9490967ea0bd6ee9e17822
+      sha256: e9076768642fe85ad2e56c6bd9866d392e80290833c37437a2ef12f155ff3fe9
+  - projectM_for_Winamp_0_94_20.exe:
+      md5: d6e46dc322d81308d6872813cae3551b
+      sha1: 265f7f14dd8eedda76a364ff75aeddec0e0ab8e4
+      sha256: 231d37fdd05a7d1f25112b5cfefd72038b001f5682364f296ecde7e20b5a9e32
   - winamp295.exe:
       md5: 1f19a5f196d8d79880d9b66d160034b6
       sha1: d859a19d4c614a789d302f4edd2e4df65a2c0869
@@ -8,30 +32,26 @@ installers:
       sha1: e339f0a838df9fca9ddab82ebc1bce4aa9b6dcfc
       sha256: a6ae6cffc96921faa476e769c9b913818c1bb2edce281625fdacd6a137c5deef
   - winamp5666_full_all.exe:
-      md5: 527a1fb24763c3ebb7cdf182fc274b6e
-      sha1: d707f61cf5639283ea281a69ca5f270e42abdcaa
-      sha256: fb5d89720f7a32c0423d5f74c5049c72e830548723505bdc3fc2f126bd9bdcd6
+      md5: 110cd80079e9572aef511b0491e63b8c
+      sha1: f702c19824ccf5471caeaee6fccc4e27558ae934
+      sha256: d26d4c7e583a6a6f46011ea0cebd32e20499ce22c0058bb8b30e010d927221ec
   - winamp5666_full_all_redux.exe:
       md5: e6c28b791a2f04b54f83b3afd0962015
       sha1: 136314be0da42ed399b88a106cb1f43093e2c0c2
       sha256: ea9a6ba81475d49876d0b8b300d93f28f7959b8e99ce4372dbde746567e14002
+  - winamp5666_full_en-us.exe:
+      md5: 9e62324097b1c99250d5f4965ddda343
+      sha1: 2433e380513ec28d3f5f833c60ad546e1374b74c
+      sha256: bc904509c9d15579a854cb007046d22d6a4bec2d154f5759e70e652a4a4c79e6
   - winamp5666_full_en-us_redux.exe:
       md5: 13d0f04d82f98ad070f59bf55db96d53
       sha1: 06fe238861ee178ded0efcd323fd0affe009c327
       sha256: 5158d1e92fe476227e9bc739cd15fff4e9e847d8598613a6ae220ce085e3a6fb
+  - winamp5666_lite_en-us.exe:
+      md5: 59b98b8faa4732278cb34b95783d7d61
+      sha1: 6427a2467a30419a44eb10f945f4dce1d893b766
+      sha256: c5173ddd736c56bbd1daf1a4929cca10229fcf6366afc0445190516030d7a101
   - winamp5666_lite_en-us_redux.exe:
       md5: 7ca1607f0fa7c221b8d8bcfb565b6558
       sha1: c791099dc3bd8465781635fe82f14961ace6a845
       sha256: 0b0c00cd41f66c3560a400a42d990419df952ca0e77be096235313222fef3636
-  - in_mp3__4_103__winamp5666_3512.exe:
-      md5: 3611b71dc1ed3763a210c7605b275229
-      sha1: c0fb444a08b689b3aa9490967ea0bd6ee9e17822
-      sha256: e9076768642fe85ad2e56c6bd9866d392e80290833c37437a2ef12f155ff3fe9
-  - Jump_to_File_Extra_v1_33_(Build_1216).exe:
-      md5: fef34661abe28ac2d4006a4ce3c71ba5
-      sha1: fbf704cef905639574ced16b5aad24f5ccd7c119
-      sha256: 35c1db977f00bc81b49024f656b1e71600d60f626011f08d9037b419ad7f6bbe
-  - AutoHotkey_1.1.28.02.zip:
-      md5: 62f41dae05c5cc442372adfe0f0f3cd1
-      sha1: 8c49206fbb032f761c4d69e2e7829d7cb8c65538
-      sha256: 505fdac9dfd2cc81f0d8cda9347bfd7ce8bb8c77250d5e885905d536feb6df46

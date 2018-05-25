@@ -2,16 +2,24 @@ FROM debian:testing
 
 # Install dependencies
 ENV DEBIAN_FRONTEND=noninteractive
-RUN { \
+RUN apt-get update \
+	&& apt-get install --assume-yes --no-install-recommends \
+		apt-transport-https \
+		apt-utils \
+		ca-certificates \
+		curl \
+		gnupg \
+	&& dpkg --add-architecture i386 \
+	&& { \
 		echo 'deb http://deb.debian.org/debian/ testing main contrib'; \
 		echo 'deb http://deb.debian.org/debian/ testing-updates main contrib'; \
 		echo 'deb http://security.debian.org/ testing/updates main contrib'; \
+		echo 'deb https://dl.winehq.org/wine-builds/debian/ testing main'; \
 	} > /etc/apt/sources.list \
-	&& echo ttf-mscorefonts-installer msttcorefonts/accepted-mscorefonts-eula select true | debconf-set-selections \
-	&& dpkg --add-architecture i386 \
+	&& curl -fsSL 'https://dl.winehq.org/wine-builds/Release.key' | apt-key add - \
+	&& echo 'ttf-mscorefonts-installer msttcorefonts/accepted-mscorefonts-eula select true' | debconf-set-selections \
 	&& apt-get update \
 	&& apt-get install --assume-yes --no-install-recommends \
-		ca-certificates \
 		fonts-dejavu \
 		fonts-liberation \
 		hicolor-icon-theme \
@@ -23,8 +31,7 @@ RUN { \
 		pulseaudio \
 		ttf-mscorefonts-installer \
 		unzip \
-		wine-development \
-		wine32-development \
+		winehq-devel \
 		xauth \
 		xvfb \
 	&& rm -rf /var/lib/apt/lists/*
@@ -54,7 +61,8 @@ USER winamp:winamp
 # Setup wine
 ENV WINEPREFIX=/home/winamp/.wine
 ENV WINEARCH=win32
-#ENV WINEDEBUG=warn+all
+ENV WINEDEBUG=fixme-all
+ENV WINEDLLOVERRIDES=mscoree,mshtml=
 ENV FREETYPE_PROPERTIES=truetype:interpreter-version=35
 COPY --chown=winamp:winamp scripts/wine-setup /tmp/wine-setup
 COPY --chown=winamp:winamp installers/ /tmp/installers/

@@ -13,6 +13,22 @@ if [ -z "${WINEPREFIX-}" ]; then
 	export WINEPREFIX=~/.wine
 fi
 
+log_info() { printf -- '[INFO] %s\n' "$@"; }
+log_warn() { >&2 printf -- '[WARN] %s\n' "$@"; }
+log_fail() { >&2 printf -- '[FAIL] %s\n' "$@"; }
+
+test_sha256() {
+	obtainedChecksum=$(sha256sum "$1" | awk '{print $1}')
+	expectedChecksum=$2
+	if [ "${obtainedChecksum}" != "${expectedChecksum}" ]; then
+		log_warn 'File checksum mismatch'
+		log_warn " - Obtained: ${obtainedChecksum}"
+		log_warn " - Expected: ${expectedChecksum}"
+		return 1
+	fi
+	return 0
+}
+
 run_reg() {
 	tmpfile=$(mktemp -t 'XXXX.reg')
 	printf -- '%s' "$1" > "${tmpfile}"
@@ -62,65 +78,152 @@ find /usr/share/fonts/ \
 	-type f \( -iname \*.ttf -o -iname \*.otf \) \
 	-exec ln -s '{}' "${WINEPREFIX}/drive_c/windows/Fonts" \;
 
-################
-# Install Winamp
-################
+################################
+# Install Winamp 2.95 Full NoAOD
+################################
 
 WINAMP_INSTALLER_LOCATION=/tmp/installers/winamp295_full_noaod.exe
-WINAMP_INSTALLER_SHA256=$(sha256sum "${WINAMP_INSTALLER_LOCATION}" | awk '{print $1}')
-WINAMP_INSTALLER_EXPECTED_SHA256=a6ae6cffc96921faa476e769c9b913818c1bb2edce281625fdacd6a137c5deef
+if [ -f "${WINAMP_INSTALLER_LOCATION}" ]; then
+	log_info 'Installing Winamp 2.95 Full NoAOD...'
 
-if [ "${WINAMP_INSTALLER_SHA256}" != "${WINAMP_INSTALLER_EXPECTED_SHA256}" ]; then
-	>&2 printf -- '%s\n' 'Winamp installer checksum mismatch!'
-	>&2 printf -- 'Expected: %s\n' "${WINAMP_INSTALLER_EXPECTED_SHA256}"
-	>&2 printf -- 'Obtained: %s\n' "${WINAMP_INSTALLER_SHA256}"
+	WINAMP_INSTALLER_SHA256=a6ae6cffc96921faa476e769c9b913818c1bb2edce281625fdacd6a137c5deef
+	test_sha256 "${WINAMP_INSTALLER_LOCATION}" "${WINAMP_INSTALLER_SHA256}" || exit 1
+
+	run_ahk "$(cat <<-EOF
+		SetWinDelay, 500
+		SetTitleMatchMode, 3
+		SetControlDelay, -1
+
+		Run, ${WINAMP_INSTALLER_LOCATION}
+
+		WinWait, Winamp Setup: License Agreement
+		ControlClick, Button2, Winamp Setup: License Agreement ; Click "I Agree" button
+
+		WinWait, Winamp Setup: Installation Options
+		ControlFocus, SysTreeView321, Winamp Setup: Installation Options ; Focus "Components" tree
+		Send, {Down} ; Select "Winamp Agent" component
+		Send, {Space} ; Uncheck "Winamp Agent" component
+		Send, {Down} ; Select "Winamp Library" component
+		Send, {Down} ; Select "Audio File Support" component
+		Send, {Down} ; Select "Video File Support" component
+		Send, {Space} ; Uncheck "Video File Support" component
+		Send, {Down} ; Select "Visualization" component
+		Send, {Down} ; Select "Extra Audio Output Support" component
+		ControlClick, Button2, Winamp Setup: Installation Options ; Click "Next" button
+
+		WinWait, Winamp Setup: Installation Folder
+		ControlClick, Button2, Winamp Setup: Installation Folder ; Click "Install" button
+
+		WinWait, Winamp Setup: Settings
+		ControlClick, Button1, Winamp Setup: Settings ; Click "Next" button
+
+		WinWait, Winamp Setup: User information
+		ControlClick, Button5, Winamp Setup: User information ; Uncheck "Allow anonymous usage statistics" checkbox
+		ControlClick, Button6, Winamp Setup: User information ; Check "Stop bugging me!" checkbox
+		ControlClick, Button1, Winamp Setup: User information ; Click "Next" button
+
+		WinWait, Sending in survey
+		ControlClick, Button1, Sending in survey ; Click "Close" button
+
+		WinWait, Winamp Setup: Winamp successfully installed
+		WinClose, Winamp Setup: Winamp successfully installed
+	EOF
+	)"
+
+	if [ -f "${WINEPREFIX}/drive_c/Program Files/Winamp/winamp.exe" ]; then
+		log_info 'Winamp 2.95 Full NoAOD successfully installed'
+	else
+		log_fail 'Winamp 2.95 Full NoAOD installation failed'
+		exit 1
+	fi
+else
+	log_fail 'Winamp 2.95 Full NoAOD installer not found'
 	exit 1
 fi
 
-run_ahk "$(cat <<-EOF
-	SetWinDelay 500
-	SetTitleMatchMode, 3
-	SetControlDelay -1
+#######################
+# Install Milkdrop 1.04
+#######################
 
-	Run ${WINAMP_INSTALLER_LOCATION}
+MILKDROP_INSTALLER_LOCATION=/tmp/installers/MilkDrop_104.exe
+if [ -f "${MILKDROP_INSTALLER_LOCATION}" ]; then
+	log_info 'Installing Milkdrop 1.04...'
 
-	WinWait, Winamp Setup: License Agreement
-	ControlClick, Button2, Winamp Setup: License Agreement ; Click "I Agree" button
+	MILKDROP_INSTALLER_SHA256=2111940711cc3a426714ea81797931a739d68b1bf541002ed9f639795fd68318
+	test_sha256 "${MILKDROP_INSTALLER_LOCATION}" "${MILKDROP_INSTALLER_SHA256}" || exit 1
 
-	WinWait, Winamp Setup: Installation Options
-	ControlFocus, SysTreeView321, Winamp Setup: Installation Options ; Focus "Components" tree
-	Send {Down} ; Select "Winamp Agent" component
-	Send {Space} ; Uncheck "Winamp Agent" component
-	Send {Down} ; Select "Winamp Library" component
-	Send {Down} ; Select "Audio File Support" component
-	Send {Down} ; Select "Video File Support" component
-	Send {Space} ; Uncheck "Video File Support" component
-	Send {Down} ; Select "Visualization" component
-	Send {Down} ; Select "Extra Audio Output Support" component
-	ControlClick, Button2, Winamp Setup: Installation Options ; Click "Next" button
+	run_ahk "$(cat <<-EOF
+		SetWinDelay, 500
+		SetTitleMatchMode, 2
+		SetControlDelay, -1
 
-	WinWait, Winamp Setup: Installation Folder
-	ControlClick, Button2, Winamp Setup: Installation Folder ; Click "Install" button
+		Run, ${MILKDROP_INSTALLER_LOCATION}
 
-	WinWait, Winamp Setup: Settings
-	ControlClick, Button1, Winamp Setup: Settings ; Click "Next" button
+		WinWait, MilkDrop 1.04 Setup, Welcome to the MilkDrop Setup Wizard
+		ControlClick, 6.0.2600.2982!Button2, MilkDrop 1.04 Setup ; Click "Next" button
 
-	WinWait, Winamp Setup: User information
-	ControlClick, Button5, Winamp Setup: User information ; Uncheck "Allow anonymous usage statistics" checkbox
-	ControlClick, Button6, Winamp Setup: User information ; Check "Stop bugging me!" checkbox
-	ControlClick, Button1, Winamp Setup: User information ; Click "Next" button
+		WinWait, MilkDrop 1.04 Setup, You must accept the agreement to install MilkDrop
+		ControlClick, 6.0.2600.2982!Button2, MilkDrop 1.04 Setup ; Click "I Agree" button
 
-	WinWait, Sending in survey
-	ControlClick, Button1, Sending in survey ; Click "Close" button
+		WinWait, MilkDrop 1.04 Setup, Choose which features of MilkDrop you want to install
+		ControlClick, 6.0.2600.2982!Button2, MilkDrop 1.04 Setup ; Click "Next" button
 
-	WinWait, Winamp Setup: Winamp successfully installed
-	WinClose, Winamp Setup: Winamp successfully installed
+		WinWait, MilkDrop 1.04 Setup, Setup will install MilkDrop in the following folder
+		ControlClick, 6.0.2600.2982!Button2, MilkDrop 1.04 Setup ; Click "Install" button
 
-	WinWaitClose
-EOF
-)"
+		WinWait, MilkDrop 1.04 Setup, Setup was completed successfully
+		ControlClick, 6.0.2600.2982!Button2, MilkDrop 1.04 Setup ; Click "Close" button
+	EOF
+	)"
 
-if [ ! -f "${WINEPREFIX}/drive_c/Program Files/Winamp/winamp.exe" ]; then
-	>&2 printf -- '%s\n' 'Winamp installation failed!'
-	exit 1
+	if [ -f "${WINEPREFIX}/drive_c/Program Files/Winamp/Plugins/vis_milk.dll" ]; then
+		log_info 'Milkdrop 1.04 successfully installed'
+	else
+		log_fail 'Milkdrop 1.04 installation failed'
+		exit 1
+	fi
+fi
+
+############################
+# Install projectM 0.94 Beta
+############################
+
+PROJECTM_INSTALLER_LOCATION=/tmp/installers/projectM_for_Winamp_0_94_20.exe
+if [ -f "${PROJECTM_INSTALLER_LOCATION}" ]; then
+	log_info 'Installing projectM 0.94 Beta...'
+
+	PROJECTM_INSTALLER_SHA256=231d37fdd05a7d1f25112b5cfefd72038b001f5682364f296ecde7e20b5a9e32
+	test_sha256 "${PROJECTM_INSTALLER_LOCATION}" "${PROJECTM_INSTALLER_SHA256}" || exit 1
+
+	run_ahk "$(cat <<-EOF
+		SetWinDelay, 500
+		SetTitleMatchMode, 2
+		SetControlDelay, -1
+
+		Run, ${PROJECTM_INSTALLER_LOCATION}
+
+		WinWait, Setup - projectM Visualization Plugin for Winamp, Welcome
+		ControlClick, TButton1, Setup - projectM Visualization Plugin for Winamp ; Click "Next" button
+
+		WinWait, Setup - projectM Visualization Plugin for Winamp, License Agreement
+		ControlClick, TRadioButton1, Setup - projectM Visualization Plugin for Winamp ; Click "I accept the agreement" radio button
+		ControlClick, TButton2, Setup - projectM Visualization Plugin for Winamp ; Click "Next" button
+
+		WinWait, Setup - projectM Visualization Plugin for Winamp, Select Destination Location
+		ControlClick, TButton3, Setup - projectM Visualization Plugin for Winamp ; Click "Next" button
+
+		WinWait, Setup - projectM Visualization Plugin for Winamp, Ready to Install
+		ControlClick, TButton3, Setup - projectM Visualization Plugin for Winamp ; Click "Install" button
+
+		WinWait, Setup - projectM Visualization Plugin for Winamp, Finished
+		ControlClick, TButton3, Setup - projectM Visualization Plugin for Winamp ; Click "Finish" button
+	EOF
+	)"
+
+	if [ -f "${WINEPREFIX}/drive_c/Program Files/Winamp/Plugins/projectM_DLLs/projectM.dll" ]; then
+		log_info 'projectM 0.94 Beta successfully installed'
+	else
+		log_fail 'projectM 0.94 Beta installation failed'
+		exit 1
+	fi
 fi

@@ -5,13 +5,13 @@ set -eu
 CONTAINER_DATA_VOLUME='winamp-data'
 CONTAINER_DATA_DIRECTORY='/home/winamp/.wine'
 
-if [ -d "${HOME}/Music" ]; then
-	HOST_MUSIC_FOLDER="${HOME}/Music"
+HOST_MUSIC_FOLDER="${HOME}/Music"
+if [ -d "${HOST_MUSIC_FOLDER}" ]; then
 	CONTAINER_MUSIC_FOLDER='/home/winamp/Music'
 fi
 
-if [ -d '/tmp/.X11-unix' ]; then
-	HOST_X11_SOCKET_DIRECTORY='/tmp/.X11-unix'
+HOST_X11_SOCKET_DIRECTORY='/tmp/.X11-unix'
+if [ -d "${HOST_X11_SOCKET_DIRECTORY}" ]; then
 	CONTAINER_X11_SOCKET_DIRECTORY="${HOST_X11_SOCKET_DIRECTORY}"
 
 	HOST_XAUTHORITY_FILE='/tmp/.Xauthority.docker.winamp'
@@ -19,37 +19,48 @@ if [ -d '/tmp/.X11-unix' ]; then
 	touch "${HOST_XAUTHORITY_FILE}"
 	xauth nlist "${DISPLAY}" | sed -e 's/^..../ffff/' | xauth -f "${HOST_XAUTHORITY_FILE}" nmerge -
 
-	if [ -S '/var/run/dbus/system_bus_socket' ]; then
-		HOST_DBUS_SYSTEM_SOCKET='/var/run/dbus/system_bus_socket'
-		CONTAINER_DBUS_SYSTEM_SOCKET="${HOST_DBUS_SYSTEM_SOCKET}"
-
-		if [ -S "${XDG_RUNTIME_DIR:-}/bus" ]; then
-			HOST_DBUS_SOCKET="${XDG_RUNTIME_DIR:-}/bus"
-			CONTAINER_DBUS_SOCKET='/run/user/1000/bus'
-		fi
+	HOST_DEVICE_DRI='/dev/dri'
+	if [ -d "${HOST_DEVICE_DRI}" ]; then
+		CONTAINER_DEVICE_DRI="${HOST_DEVICE_DRI}"
 	fi
+
+	#HOST_DEVICE_NVIDIACTL='/dev/nvidiactl'
+	#HOST_DEVICE_NVIDIA0='/dev/nvidia0'
+	#if [ -c "${HOST_DEVICE_NVIDIACTL}" ] && [ -c "${HOST_DEVICE_NVIDIA0}" ]; then
+	#	CONTAINER_DEVICE_NVIDIACTL="${HOST_DEVICE_NVIDIACTL}"
+	#	CONTAINER_DEVICE_NVIDIA0="${HOST_DEVICE_NVIDIA0}"
+	#fi
 fi
 
-if [ -S "${XDG_RUNTIME_DIR:-}/pulse/native" ]; then
-	HOST_PULSEAUDIO_SOCKET="${XDG_RUNTIME_DIR}/pulse/native"
+HOST_PULSEAUDIO_SOCKET="${XDG_RUNTIME_DIR-}/pulse/native"
+if [ -S "${HOST_PULSEAUDIO_SOCKET}" ]; then
 	CONTAINER_PULSEAUDIO_SOCKET='/run/user/1000/pulse/native'
 fi
 
 docker run --tty --interactive --rm \
 	--name winamp \
 	--network none \
-	--mount type=volume,src="${CONTAINER_DATA_VOLUME}",dst="${CONTAINER_DATA_DIRECTORY}" \
-	${HOST_MUSIC_FOLDER:+ \
+	${CONTAINER_DATA_VOLUME:+ \
+		--mount type=volume,src="${CONTAINER_DATA_VOLUME}",dst="${CONTAINER_DATA_DIRECTORY}" \
+	} \
+	${CONTAINER_MUSIC_FOLDER:+ \
 		--mount type=bind,src="${HOST_MUSIC_FOLDER}",dst="${CONTAINER_MUSIC_FOLDER}",ro \
 	} \
-	${HOST_X11_SOCKET_DIRECTORY:+ \
+	${CONTAINER_X11_SOCKET_DIRECTORY:+ \
 		--mount type=bind,src="${HOST_X11_SOCKET_DIRECTORY}",dst="${CONTAINER_X11_SOCKET_DIRECTORY}",ro \
 		--env DISPLAY="${DISPLAY}" \
 		--mount type=bind,src="${HOST_XAUTHORITY_FILE}",dst="${CONTAINER_XAUTHORITY_FILE}",ro \
 		--env XAUTHORITY="${CONTAINER_XAUTHORITY_FILE}" \
-		${HOST_DBUS_SYSTEM_SOCKET:+ \
+		${CONTAINER_DEVICE_DRI:+ \
+			--device "${HOST_DEVICE_DRI}":"${CONTAINER_DEVICE_DRI}",r \
+		} \
+		${CONTAINER_DEVICE_NVIDIACTL:+ \
+			--device "${HOST_DEVICE_NVIDIACTL}":"${CONTAINER_DEVICE_NVIDIACTL}",r \
+			--device "${CONTAINER_DEVICE_NVIDIA0}":"${CONTAINER_DEVICE_NVIDIA0}",r \
+		} \
+		${CONTAINER_DBUS_SYSTEM_SOCKET:+ \
 			--mount type=bind,src="${HOST_DBUS_SYSTEM_SOCKET}",dst="${CONTAINER_DBUS_SYSTEM_SOCKET}",ro \
-			${HOST_DBUS_SOCKET:+ \
+			${CONTAINER_DBUS_SOCKET:+ \
 				--mount type=bind,src="${HOST_DBUS_SOCKET}",dst="${CONTAINER_DBUS_SOCKET}",ro \
 				--env DBUS_SESSION_BUS_ADDRESS="${DBUS_SESSION_BUS_ADDRESS}" \
 				--env DBUS_STARTER_ADDRESS="${DBUS_STARTER_ADDRESS}" \
@@ -57,7 +68,7 @@ docker run --tty --interactive --rm \
 			} \
 		} \
 	} \
-	${HOST_PULSEAUDIO_SOCKET:+ \
+	${CONTAINER_PULSEAUDIO_SOCKET:+ \
 		--mount type=bind,src="${HOST_PULSEAUDIO_SOCKET}",dst="${CONTAINER_PULSEAUDIO_SOCKET}",ro \
 		--env PULSE_SERVER="${CONTAINER_PULSEAUDIO_SOCKET}" \
 	} \

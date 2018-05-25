@@ -15,6 +15,11 @@ RUN { \
 		fonts-dejavu \
 		fonts-liberation \
 		hicolor-icon-theme \
+		libgl1-mesa-dri \
+		libgl1-mesa-dri:i386 \
+		libgl1-mesa-glx \
+		libgl1-mesa-glx:i386 \
+		mesa-utils \
 		pulseaudio \
 		ttf-mscorefonts-installer \
 		unzip \
@@ -53,6 +58,6 @@ ENV WINEARCH=win32
 ENV FREETYPE_PROPERTIES=truetype:interpreter-version=35
 COPY --chown=winamp:winamp scripts/wine-setup /tmp/wine-setup
 COPY --chown=winamp:winamp installers/ /tmp/installers/
-RUN timeout 120 /tmp/wine-setup && rm -rf /tmp/wine-setup /tmp/installers/
+RUN timeout 240 /tmp/wine-setup && rm -rf /tmp/wine-setup /tmp/installers/
 
 CMD ["wine", "/home/winamp/.wine/drive_c/Program Files/Winamp/winamp.exe"]

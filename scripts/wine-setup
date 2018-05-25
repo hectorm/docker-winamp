@@ -4,7 +4,10 @@ set -eu
 
 if [ -z "${DISPLAY-}" ]; then
 	Xvfb :99 & xvfb_pid=$!
-	killXvfb() { sleep 2; kill "${xvfb_pid}"; }
+	killXvfb() {
+		wine wineboot --kill
+		sleep 2 && kill "${xvfb_pid}"
+	}
 	trap killXvfb EXIT
 	export DISPLAY=:99
 fi

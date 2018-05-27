@@ -1,4 +1,4 @@
-FROM debian:testing
+FROM debian:testing-slim
 
 # Install dependencies
 ENV DEBIAN_FRONTEND=noninteractive

@@ -133,11 +133,18 @@ if [ -f "${WINAMP_INSTALLER_LOCATION}" ]; then
 	EOF
 	)"
 
-	if [ -f "${WINEPREFIX}/drive_c/Program Files/Winamp/winamp.exe" ]; then
+	WINAMP_INSTALL_DIR="${WINEPREFIX}/drive_c/Program Files/Winamp"
+	if [ -f "${WINAMP_INSTALL_DIR}/winamp.exe" ]; then
 		log_info 'Winamp 2.95 Full NoAOD successfully installed'
 	else
 		log_fail 'Winamp 2.95 Full NoAOD installation failed'
 		exit 1
+	fi
+
+	# Copy Winamp config if available
+	WINAMP_CONFIG_INI=/tmp/config/Winamp.ini
+	if [ -f "${WINAMP_CONFIG_INI}" ]; then
+		mv -f "${WINAMP_CONFIG_INI}" "${WINAMP_INSTALL_DIR}/Winamp.ini"
 	fi
 else
 	log_fail 'Winamp 2.95 Full NoAOD installer not found'
@@ -179,12 +186,21 @@ if [ -f "${MILKDROP_INSTALLER_LOCATION}" ]; then
 	EOF
 	)"
 
-	if [ -f "${WINEPREFIX}/drive_c/Program Files/Winamp/Plugins/vis_milk.dll" ]; then
+	if [ -f "${WINAMP_INSTALL_DIR}/Plugins/vis_milk.dll" ]; then
 		log_info 'Milkdrop 1.04 successfully installed'
 	else
 		log_fail 'Milkdrop 1.04 installation failed'
 		exit 1
 	fi
+
+	# Copy Milkdrop config if available
+	MILKDROP_CONFIG_INI=/tmp/config/Plugins/milkdrop_config.ini
+	if [ -f "${MILKDROP_CONFIG_INI}" ]; then
+		mv -f "${MILKDROP_CONFIG_INI}" "${WINAMP_INSTALL_DIR}/Plugins/milkdrop_config.ini"
+	fi
+
+	# Set Milkdrop as default visualizer
+	sed -i 's|^\(visplugin_name\)=.*$|\1=vis_milk.dll|' "${WINAMP_INSTALL_DIR}/Winamp.ini"
 fi
 
 ############################
@@ -223,7 +239,7 @@ if [ -f "${PROJECTM_INSTALLER_LOCATION}" ]; then
 	EOF
 	)"
 
-	if [ -f "${WINEPREFIX}/drive_c/Program Files/Winamp/Plugins/projectM_DLLs/projectM.dll" ]; then
+	if [ -f "${WINAMP_INSTALL_DIR}/Plugins/projectM_DLLs/projectM.dll" ]; then
 		log_info 'projectM 0.94 Beta successfully installed'
 	else
 		log_fail 'projectM 0.94 Beta installation failed'

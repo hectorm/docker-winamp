@@ -64,8 +64,10 @@ ENV WINEARCH=win32
 ENV WINEDEBUG=fixme-all
 ENV WINEDLLOVERRIDES=mscoree,mshtml=
 ENV FREETYPE_PROPERTIES=truetype:interpreter-version=35
-COPY --chown=winamp:winamp scripts/wine-setup /tmp/wine-setup
+COPY --chown=winamp:winamp config/ /tmp/config/
 COPY --chown=winamp:winamp installers/ /tmp/installers/
-RUN timeout 240 /tmp/wine-setup && rm -rf /tmp/wine-setup /tmp/installers/
+COPY --chown=winamp:winamp scripts/ /tmp/scripts/
+RUN timeout 240 /tmp/scripts/wine-setup \
+	&& rm -rf /tmp/config/ /tmp/installers/ /tmp/scripts/
 
 CMD ["wine", "/home/winamp/.wine/drive_c/Program Files/Winamp/winamp.exe"]

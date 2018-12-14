@@ -53,6 +53,7 @@ endef
 save-image: $(IMAGE_TARBALL)
 
 $(IMAGE_TARBALL): build-image
+	mkdir -p '$(DISTDIR)'
 	$(call save_image,$(IMAGE_LATEST_TAG),$@)
 
 ##################################################

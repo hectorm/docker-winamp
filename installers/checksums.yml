@@ -3,14 +3,6 @@ installers:
       md5: 62f41dae05c5cc442372adfe0f0f3cd1
       sha1: 8c49206fbb032f761c4d69e2e7829d7cb8c65538
       sha256: 505fdac9dfd2cc81f0d8cda9347bfd7ce8bb8c77250d5e885905d536feb6df46
-  - Jump_to_File_Extra_v1_33_(Build_1216).exe:
-      md5: fef34661abe28ac2d4006a4ce3c71ba5
-      sha1: fbf704cef905639574ced16b5aad24f5ccd7c119
-      sha256: 35c1db977f00bc81b49024f656b1e71600d60f626011f08d9037b419ad7f6bbe
-  - MilkDrop_104.exe:
-      md5: 76a9417ef97d327b4783b32ec3da09e4
-      sha1: 8466620ad23eb178b9ab55180b7fb648a0be4042
-      sha256: 2111940711cc3a426714ea81797931a739d68b1bf541002ed9f639795fd68318
   - favorite_presets_2013_12.zip:
       md5: ad9e4e821f13c198a314999aac478fa1
       sha1: b0c00b6202e4a0fb7e98ee3a154234eafdb202df
@@ -19,6 +11,14 @@ installers:
       md5: 3611b71dc1ed3763a210c7605b275229
       sha1: c0fb444a08b689b3aa9490967ea0bd6ee9e17822
       sha256: e9076768642fe85ad2e56c6bd9866d392e80290833c37437a2ef12f155ff3fe9
+  - Jump_to_File_Extra_v1_33_(Build_1216).exe:
+      md5: fef34661abe28ac2d4006a4ce3c71ba5
+      sha1: fbf704cef905639574ced16b5aad24f5ccd7c119
+      sha256: 35c1db977f00bc81b49024f656b1e71600d60f626011f08d9037b419ad7f6bbe
+  - MilkDrop_104.exe:
+      md5: 76a9417ef97d327b4783b32ec3da09e4
+      sha1: 8466620ad23eb178b9ab55180b7fb648a0be4042
+      sha256: 2111940711cc3a426714ea81797931a739d68b1bf541002ed9f639795fd68318
   - projectM_for_Winamp_0_94_20.exe:
       md5: d6e46dc322d81308d6872813cae3551b
       sha1: 265f7f14dd8eedda76a364ff75aeddec0e0ab8e4

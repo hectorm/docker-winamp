@@ -1,8 +1,8 @@
 installers:
-  - AutoHotkey_1.1.28.02.zip:
-      md5: 62f41dae05c5cc442372adfe0f0f3cd1
-      sha1: 8c49206fbb032f761c4d69e2e7829d7cb8c65538
-      sha256: 505fdac9dfd2cc81f0d8cda9347bfd7ce8bb8c77250d5e885905d536feb6df46
+  - AutoHotkey_1.1.30.01.zip:
+      md5: b6aa3df8a5c94cbffd6a1cc1628a6c0f
+      sha1: 85cef05af268515765280a362217ab9c1b725a01
+      sha256: 1096575ed518365a4f19c6d1ea86e088de8b29f9e0923aa3ca3a800487363d58
   - favorite_presets_2013_12.zip:
       md5: ad9e4e821f13c198a314999aac478fa1
       sha1: b0c00b6202e4a0fb7e98ee3a154234eafdb202df

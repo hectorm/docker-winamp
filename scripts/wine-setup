@@ -36,21 +36,20 @@ run_reg() {
 	tmpfile=$(mktemp -t 'XXXX.reg')
 	printf -- '%s' "$1" > "${tmpfile}"
 	wine regedit "${tmpfile}"
-	rm "${tmpfile}"
+	rm -f "${tmpfile}"
 }
 
 run_ahk() {
-	autohotkey='/tmp/installers/AutoHotkeyU32.exe'
+	autohotkey='/tmp/setup/installers/AutoHotkeyU32.exe'
 	if [ ! -f "${autohotkey}" ]; then
-		(cd /tmp/installers/ && unzip /tmp/installers/AutoHotkey_1.1.*.zip \
-			'AutoHotkeyU32.exe' \
-			'WindowSpy.ahk'
+		(cd /tmp/setup/installers/ \
+			&& unzip /tmp/setup/installers/AutoHotkey_1.1.*.zip 'AutoHotkeyU32.exe' 'WindowSpy.ahk' \
 		)
 	fi
 	tmpfile=$(mktemp -t 'XXXX.ahk')
 	printf -- '%s' "$1" > "${tmpfile}"
 	wine "${autohotkey}" "${tmpfile}"
-	rm "${tmpfile}"
+	rm -f "${tmpfile}"
 }
 
 ########################################################
@@ -85,7 +84,7 @@ find /usr/share/fonts/ \
 # Install Winamp 2.95 Full NoAOD
 ################################
 
-WINAMP_INSTALLER_LOCATION=/tmp/installers/winamp295_full_noaod.exe
+WINAMP_INSTALLER_LOCATION=/tmp/setup/installers/winamp295_full_noaod.exe
 if [ -f "${WINAMP_INSTALLER_LOCATION}" ]; then
 	log_info 'Installing Winamp 2.95 Full NoAOD...'
 
@@ -142,7 +141,7 @@ if [ -f "${WINAMP_INSTALLER_LOCATION}" ]; then
 	fi
 
 	# Copy Winamp config if available
-	WINAMP_CONFIG_INI=/tmp/config/Winamp.ini
+	WINAMP_CONFIG_INI=/tmp/setup/config/Winamp.ini
 	if [ -f "${WINAMP_CONFIG_INI}" ]; then
 		mv -f "${WINAMP_CONFIG_INI}" "${WINAMP_INSTALL_DIR}/Winamp.ini"
 	fi
@@ -155,7 +154,7 @@ fi
 # Install Milkdrop 1.04
 #######################
 
-MILKDROP_INSTALLER_LOCATION=/tmp/installers/MilkDrop_104.exe
+MILKDROP_INSTALLER_LOCATION=/tmp/setup/installers/MilkDrop_104.exe
 if [ -f "${MILKDROP_INSTALLER_LOCATION}" ]; then
 	log_info 'Installing Milkdrop 1.04...'
 
@@ -170,19 +169,19 @@ if [ -f "${MILKDROP_INSTALLER_LOCATION}" ]; then
 		Run, ${MILKDROP_INSTALLER_LOCATION}
 
 		WinWait, MilkDrop 1.04 Setup, Welcome to the MilkDrop Setup Wizard
-		ControlClick, 6.0.2600.2982!Button2, MilkDrop 1.04 Setup ; Click "Next" button
+		ControlClick, Button2, MilkDrop 1.04 Setup ; Click "Next" button
 
 		WinWait, MilkDrop 1.04 Setup, You must accept the agreement to install MilkDrop
-		ControlClick, 6.0.2600.2982!Button2, MilkDrop 1.04 Setup ; Click "I Agree" button
+		ControlClick, Button2, MilkDrop 1.04 Setup ; Click "I Agree" button
 
 		WinWait, MilkDrop 1.04 Setup, Choose which features of MilkDrop you want to install
-		ControlClick, 6.0.2600.2982!Button2, MilkDrop 1.04 Setup ; Click "Next" button
+		ControlClick, Button2, MilkDrop 1.04 Setup ; Click "Next" button
 
 		WinWait, MilkDrop 1.04 Setup, Setup will install MilkDrop in the following folder
-		ControlClick, 6.0.2600.2982!Button2, MilkDrop 1.04 Setup ; Click "Install" button
+		ControlClick, Button2, MilkDrop 1.04 Setup ; Click "Install" button
 
 		WinWait, MilkDrop 1.04 Setup, Setup was completed successfully
-		ControlClick, 6.0.2600.2982!Button2, MilkDrop 1.04 Setup ; Click "Close" button
+		ControlClick, Button2, MilkDrop 1.04 Setup ; Click "Close" button
 	EOF
 	)"
 
@@ -194,7 +193,7 @@ if [ -f "${MILKDROP_INSTALLER_LOCATION}" ]; then
 	fi
 
 	# Copy Milkdrop config if available
-	MILKDROP_CONFIG_INI=/tmp/config/Plugins/milkdrop_config.ini
+	MILKDROP_CONFIG_INI=/tmp/setup/config/Plugins/milkdrop_config.ini
 	if [ -f "${MILKDROP_CONFIG_INI}" ]; then
 		mv -f "${MILKDROP_CONFIG_INI}" "${WINAMP_INSTALL_DIR}/Plugins/milkdrop_config.ini"
 	fi
@@ -207,7 +206,7 @@ fi
 # Install projectM 0.94 Beta
 ############################
 
-PROJECTM_INSTALLER_LOCATION=/tmp/installers/projectM_for_Winamp_0_94_20.exe
+PROJECTM_INSTALLER_LOCATION=/tmp/setup/installers/projectM_for_Winamp_0_94_20.exe
 if [ -f "${PROJECTM_INSTALLER_LOCATION}" ]; then
 	log_info 'Installing projectM 0.94 Beta...'
 

@@ -1,25 +1,20 @@
-FROM debian:testing-slim
+FROM ubuntu:18.04
 
-# Install dependencies
-ENV DEBIAN_FRONTEND=noninteractive
-RUN apt-get update \
-	&& apt-get install --assume-yes --no-install-recommends \
+# Install system packages
+RUN export DEBIAN_FRONTEND=noninteractive \
+	&& apt-get update \
+	&& apt-get install -y --no-install-recommends \
 		apt-transport-https \
 		apt-utils \
 		ca-certificates \
 		curl \
 		gnupg \
 	&& dpkg --add-architecture i386 \
-	&& { \
-		echo 'deb http://deb.debian.org/debian/ testing main contrib'; \
-		echo 'deb http://deb.debian.org/debian/ testing-updates main contrib'; \
-		echo 'deb http://security.debian.org/ testing/updates main contrib'; \
-		echo 'deb https://dl.winehq.org/wine-builds/debian/ testing main'; \
-	} > /etc/apt/sources.list \
 	&& curl -fsSL 'https://dl.winehq.org/wine-builds/Release.key' | apt-key add - \
-	&& echo 'ttf-mscorefonts-installer msttcorefonts/accepted-mscorefonts-eula select true' | debconf-set-selections \
+	&& printf '%s\n' 'deb https://dl.winehq.org/wine-builds/ubuntu/ bionic main' > /etc/apt/sources.list.d/wine.list \
+	&& printf '%s\n' 'ttf-mscorefonts-installer msttcorefonts/accepted-mscorefonts-eula select true' | debconf-set-selections \
 	&& apt-get update \
-	&& apt-get install --assume-yes --no-install-recommends \
+	&& apt-get install -y --no-install-recommends \
 		fonts-dejavu \
 		fonts-liberation \
 		hicolor-icon-theme \
@@ -58,16 +53,19 @@ RUN groupadd \
 WORKDIR /home/winamp
 USER winamp:winamp
 
-# Setup wine
+# Environment
 ENV WINEPREFIX=/home/winamp/.wine
 ENV WINEARCH=win32
 ENV WINEDEBUG=fixme-all
 ENV WINEDLLOVERRIDES=mscoree,mshtml=
 ENV FREETYPE_PROPERTIES=truetype:interpreter-version=35
-COPY --chown=winamp:winamp config/ /tmp/config/
-COPY --chown=winamp:winamp installers/ /tmp/installers/
-COPY --chown=winamp:winamp scripts/ /tmp/scripts/
-RUN timeout 240 /tmp/scripts/wine-setup \
-	&& rm -rf /tmp/config/ /tmp/installers/ /tmp/scripts/
+
+# Setup wine
+RUN mkdir -p /tmp/setup/ "${WINEPREFIX}"
+COPY --chown=winamp:winamp config/ /tmp/setup/config/
+COPY --chown=winamp:winamp installers/ /tmp/setup/installers/
+COPY --chown=winamp:winamp scripts/ /tmp/setup/scripts/
+RUN timeout 240 /tmp/setup/scripts/wine-setup
+RUN rm -rf /tmp/setup/
 
 CMD ["wine", "/home/winamp/.wine/drive_c/Program Files/Winamp/winamp.exe"]

@@ -1,34 +1,93 @@
 #!/usr/bin/make -f
 
-MKFILE_RELPATH := $(shell printf -- '%s' '$(MAKEFILE_LIST)' | sed 's|^\ ||')
-MKFILE_ABSPATH := $(shell readlink -f -- '$(MKFILE_RELPATH)')
-MKFILE_DIR := $(shell dirname -- '$(MKFILE_ABSPATH)')
+SHELL := /bin/sh
+.SHELLFLAGS = -eu -c
 
-.PHONY: all \
-	build build-image \
-	clean clean-image clean-dist
+DOCKER := $(shell command -v docker 2>/dev/null)
+GIT := $(shell command -v git 2>/dev/null)
 
-all: build
+DISTDIR := ./dist
 
-build: dist/winamp.tgz
+IMAGE_NAMESPACE := hectormolinero
+IMAGE_NAME := winamp
+IMAGE_VERSION := v0
 
+# If git is available and the directory is a repository, use the latest tag as IMAGE_VERSION.
+ifeq ([$(notdir $(GIT))][$(wildcard .git/.)],[git][.git/.])
+	IMAGE_VERSION := $(shell '$(GIT)' describe --abbrev=0 --tags 2>/dev/null || printf '%s' '$(IMAGE_VERSION)')
+endif
+
+IMAGE_LATEST_TAG := $(IMAGE_NAMESPACE)/$(IMAGE_NAME):latest
+IMAGE_VERSION_TAG := $(IMAGE_NAMESPACE)/$(IMAGE_NAME):$(IMAGE_VERSION)
+
+IMAGE_DOCKERFILE := ./Dockerfile
+IMAGE_TARBALL := $(DISTDIR)/$(IMAGE_NAME).tgz
+
+##################################################
+## "all" target
+##################################################
+
+.PHONY: all
+all: save-image
+
+##################################################
+## "build-*" targets
+##################################################
+
+.PHONY: build-image
 build-image:
-	docker build \
-		--rm \
-		--tag winamp \
-		'$(MKFILE_DIR)'
+	'$(DOCKER)' build \
+		--tag '$(IMAGE_LATEST_TAG)' \
+		--tag '$(IMAGE_VERSION_TAG)' \
+		--file '$(IMAGE_DOCKERFILE)' ./
 
-dist/:
-	mkdir -p dist
+##################################################
+## "save-*" targets
+##################################################
 
-dist/winamp.tgz: dist/ build-image
-	docker save winamp | gzip > dist/winamp.tgz
+define save_image
+	'$(DOCKER)' save '$(1)' | gzip -n > '$(2)'
+endef
 
-clean: clean-image clean-dist
+.PHONY: save-image
+save-image: $(IMAGE_TARBALL)
 
-clean-image:
-	-docker rmi winamp
+$(IMAGE_TARBALL): build-image
+	$(call save_image,$(IMAGE_LATEST_TAG),$@)
 
-clean-dist:
-	rm -f dist/winamp.tgz
-	-rmdir dist
+##################################################
+## "load-*" targets
+##################################################
+
+define load_image
+	'$(DOCKER)' load -i '$(1)'
+endef
+
+.PHONY: load-image
+load-image:
+	$(call load_image,$(IMAGE_TARBALL))
+
+##################################################
+## "version" target
+##################################################
+
+.PHONY: version
+version:
+	@if printf -- '%s' '$(IMAGE_VERSION)' | grep -q '^v[0-9]\{1,\}$$'; then \
+		NEW_IMAGE_VERSION=$$(awk -v 'v=$(IMAGE_VERSION)' 'BEGIN {printf "v%.0f", substr(v,2)+1}'); \
+		printf -- '%s\n' "$${NEW_IMAGE_VERSION}" > ./VERSION; \
+		'$(GIT)' add ./VERSION; '$(GIT)' commit -m "$${NEW_IMAGE_VERSION}"; \
+		'$(GIT)' tag -a "$${NEW_IMAGE_VERSION}" -m "$${NEW_IMAGE_VERSION}"; \
+	else \
+		>&2 printf -- 'Malformed version string: %s\n' '$(IMAGE_VERSION)'; \
+		exit 1; \
+	fi
+
+##################################################
+## "clean" target
+##################################################
+
+.PHONY: clean
+clean:
+	rm -f '$(IMAGE_TARBALL)'
+	if [ -d '$(DISTDIR)' ]; then rmdir '$(DISTDIR)'; fi

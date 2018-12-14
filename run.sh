@@ -1,75 +1,77 @@
 #!/bin/sh
 
 set -eu
+export LC_ALL=C
 
-CONTAINER_DATA_VOLUME='winamp-data'
-CONTAINER_DATA_DIRECTORY='/home/winamp/.wine'
+DOCKER_IMAGE_NAMESPACE=hectormolinero
+DOCKER_IMAGE_NAME=winamp
+DOCKER_IMAGE_VERSION=latest
+DOCKER_IMAGE=${DOCKER_IMAGE_NAMESPACE}/${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_VERSION}
+DOCKER_CONTAINER=${DOCKER_IMAGE_NAME}
+DOCKER_VOLUME="${DOCKER_CONTAINER}"-data
 
-HOST_MUSIC_FOLDER="${HOME}/Music"
-if [ -d "${HOST_MUSIC_FOLDER}" ]; then
-	CONTAINER_MUSIC_FOLDER='/home/winamp/Music'
+imageExists() { [ -n "$(docker images -q "$1")" ]; }
+containerExists() { docker ps -aqf name="$1" --format '{{.Names}}' | grep -Fxq "$1"; }
+containerIsRunning() { docker ps -qf name="$1" --format '{{.Names}}' | grep -Fxq "$1"; }
+
+if ! imageExists "${DOCKER_IMAGE}"; then
+	>&2 printf -- '%s\n' "${DOCKER_IMAGE} image doesn't exist!"
+	exit 1
 fi
 
-HOST_X11_SOCKET_DIRECTORY='/tmp/.X11-unix'
-if [ -d "${HOST_X11_SOCKET_DIRECTORY}" ]; then
-	CONTAINER_X11_SOCKET_DIRECTORY="${HOST_X11_SOCKET_DIRECTORY}"
+if containerIsRunning "${DOCKER_CONTAINER}"; then
+	printf -- '%s\n' "Stopping \"${DOCKER_CONTAINER}\" container..."
+	docker stop "${DOCKER_CONTAINER}" >/dev/null
+fi
 
-	HOST_XAUTHORITY_FILE='/tmp/.Xauthority.docker.winamp'
-	CONTAINER_XAUTHORITY_FILE='/home/winamp/.Xauthority'
-	touch "${HOST_XAUTHORITY_FILE}"
-	xauth nlist "${DISPLAY}" | sed -e 's/^..../ffff/' | xauth -f "${HOST_XAUTHORITY_FILE}" nmerge -
+if containerExists "${DOCKER_CONTAINER}"; then
+	printf -- '%s\n' "Removing \"${DOCKER_CONTAINER}\" container..."
+	docker rm "${DOCKER_CONTAINER}" >/dev/null
+fi
 
-	HOST_DEVICE_DRI='/dev/dri'
-	if [ -d "${HOST_DEVICE_DRI}" ]; then
-		CONTAINER_DEVICE_DRI="${HOST_DEVICE_DRI}"
+if [ -d "${HOME}/Music" ]; then
+	MUSIC_FOLDER="${HOME}/Music"
+fi
+
+if [ -d '/tmp/.X11-unix' ]; then
+	X11_SOCKET_DIRECTORY='/tmp/.X11-unix'
+
+	XAUTHORITY_FILE='/tmp/.Xauthority.docker.winamp'
+	touch "${XAUTHORITY_FILE}"
+	xauth nlist "${DISPLAY}" | sed -e 's/^..../ffff/' | xauth -f "${XAUTHORITY_FILE}" nmerge -
+
+	if [ -d '/dev/dri' ]; then
+		DEVICE_DRI='/dev/dri'
 	fi
 
-	#HOST_DEVICE_NVIDIACTL='/dev/nvidiactl'
-	#HOST_DEVICE_NVIDIA0='/dev/nvidia0'
-	#if [ -c "${HOST_DEVICE_NVIDIACTL}" ] && [ -c "${HOST_DEVICE_NVIDIA0}" ]; then
-	#	CONTAINER_DEVICE_NVIDIACTL="${HOST_DEVICE_NVIDIACTL}"
-	#	CONTAINER_DEVICE_NVIDIA0="${HOST_DEVICE_NVIDIA0}"
+	#if [ -c '/dev/nvidiactl' ] && [ -c '/dev/nvidia0' ]; then
+	#	DEVICE_NVIDIACTL='/dev/nvidiactl'
+	#	DEVICE_NVIDIA0='/dev/nvidia0'
 	#fi
 fi
 
-HOST_PULSEAUDIO_SOCKET="${XDG_RUNTIME_DIR-}/pulse/native"
-if [ -S "${HOST_PULSEAUDIO_SOCKET}" ]; then
-	CONTAINER_PULSEAUDIO_SOCKET='/run/user/1000/pulse/native'
+if [ -S "${XDG_RUNTIME_DIR-}/pulse/native" ]; then
+	PULSEAUDIO_SOCKET="${XDG_RUNTIME_DIR-}/pulse/native"
 fi
 
-docker run --tty --interactive --rm \
-	--name winamp \
+printf -- '%s\n' "Creating \"${DOCKER_CONTAINER}\" container..."
+exec docker run --tty --interactive --rm \
+	--name "${DOCKER_CONTAINER}" \
 	--network none \
-	${CONTAINER_DATA_VOLUME:+ \
-		--mount type=volume,src="${CONTAINER_DATA_VOLUME}",dst="${CONTAINER_DATA_DIRECTORY}" \
-	} \
-	${CONTAINER_MUSIC_FOLDER:+ \
-		--mount type=bind,src="${HOST_MUSIC_FOLDER}",dst="${CONTAINER_MUSIC_FOLDER}",ro \
-	} \
-	${CONTAINER_X11_SOCKET_DIRECTORY:+ \
-		--mount type=bind,src="${HOST_X11_SOCKET_DIRECTORY}",dst="${CONTAINER_X11_SOCKET_DIRECTORY}",ro \
+	--log-driver none \
+	--mount type=volume,src="${DOCKER_VOLUME}",dst='/home/winamp/.wine' \
+	${MUSIC_FOLDER+--mount type=bind,src="${MUSIC_FOLDER}",dst='/home/winamp/Music',ro} \
+	${X11_SOCKET_DIRECTORY+ \
 		--env DISPLAY="${DISPLAY}" \
-		--mount type=bind,src="${HOST_XAUTHORITY_FILE}",dst="${CONTAINER_XAUTHORITY_FILE}",ro \
-		--env XAUTHORITY="${CONTAINER_XAUTHORITY_FILE}" \
-		${CONTAINER_DEVICE_DRI:+ \
-			--device "${HOST_DEVICE_DRI}":"${CONTAINER_DEVICE_DRI}":r \
-		} \
-		${CONTAINER_DEVICE_NVIDIACTL:+ \
-			--device "${HOST_DEVICE_NVIDIACTL}":"${CONTAINER_DEVICE_NVIDIACTL}":r \
-			--device "${CONTAINER_DEVICE_NVIDIA0}":"${CONTAINER_DEVICE_NVIDIA0}":r \
-		} \
-		${CONTAINER_DBUS_SYSTEM_SOCKET:+ \
-			--mount type=bind,src="${HOST_DBUS_SYSTEM_SOCKET}",dst="${CONTAINER_DBUS_SYSTEM_SOCKET}",ro \
-			${CONTAINER_DBUS_SOCKET:+ \
-				--mount type=bind,src="${HOST_DBUS_SOCKET}",dst="${CONTAINER_DBUS_SOCKET}",ro \
-				--env DBUS_SESSION_BUS_ADDRESS="${DBUS_SESSION_BUS_ADDRESS}" \
-				--env DBUS_STARTER_ADDRESS="${DBUS_STARTER_ADDRESS}" \
-				--env DBUS_STARTER_BUS_TYPE="${DBUS_STARTER_BUS_TYPE}" \
-			} \
-		} \
+		--mount type=bind,src="${X11_SOCKET_DIRECTORY}",dst='/tmp/.X11-unix',ro \
+		--env XAUTHORITY='/home/winamp/.Xauthority' \
+		--mount type=bind,src="${XAUTHORITY_FILE}",dst='/home/winamp/.Xauthority',ro \
+		${DEVICE_DRI+--device "${DEVICE_DRI}":'/dev/dri':r} \
+		${DEVICE_NVIDIACTL+--device "${DEVICE_NVIDIACTL}":'/dev/nvidiactl':r} \
+		${DEVICE_NVIDIA0+--device "${DEVICE_NVIDIA0}":'/dev/nvidia0':r} \
 	} \
-	${CONTAINER_PULSEAUDIO_SOCKET:+ \
-		--mount type=bind,src="${HOST_PULSEAUDIO_SOCKET}",dst="${CONTAINER_PULSEAUDIO_SOCKET}",ro \
-		--env PULSE_SERVER="${CONTAINER_PULSEAUDIO_SOCKET}" \
+	${PULSEAUDIO_SOCKET+ \
+		--env PULSE_SERVER='/run/user/1000/pulse/native' \
+		--mount type=bind,src="${PULSEAUDIO_SOCKET}",dst='/run/user/1000/pulse/native',ro \
 	} \
-	winamp "$@"
+	"${DOCKER_IMAGE}" "$@"

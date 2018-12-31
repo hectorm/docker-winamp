@@ -26,7 +26,7 @@ RUN export DEBIAN_FRONTEND=noninteractive \
 		pulseaudio \
 		ttf-mscorefonts-installer \
 		unzip \
-		winehq-devel \
+		winehq-stable \
 		xauth \
 		xvfb \
 	&& rm -rf /var/lib/apt/lists/*

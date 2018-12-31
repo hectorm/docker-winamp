@@ -1,3 +1,7 @@
 /dist/
-/installers/*.exe
-/installers/*.zip
+/installers/*
+!/installers/checksums.sh
+!/installers/MD5SUMS
+!/installers/README.md
+!/installers/SHA1SUMS
+!/installers/SHA256SUMS

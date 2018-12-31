@@ -36,7 +36,7 @@ fi
 if [ -d '/tmp/.X11-unix' ]; then
 	X11_SOCKET_DIRECTORY='/tmp/.X11-unix'
 
-	XAUTHORITY_FILE='/tmp/.Xauthority.docker.winamp'
+	XAUTHORITY_FILE="/tmp/.Xauthority.docker.${DOCKER_IMAGE_NAME}"
 	touch "${XAUTHORITY_FILE}"
 	xauth nlist "${DISPLAY}" | sed -e 's/^..../ffff/' | xauth -f "${XAUTHORITY_FILE}" nmerge -
 
@@ -59,13 +59,13 @@ exec docker run --tty --interactive --rm \
 	--name "${DOCKER_CONTAINER}" \
 	--network none \
 	--log-driver none \
-	--mount type=volume,src="${DOCKER_VOLUME}",dst='/home/winamp/.wine' \
-	${MUSIC_FOLDER+--mount type=bind,src="${MUSIC_FOLDER}",dst='/home/winamp/Music',ro} \
+	--mount type=volume,src="${DOCKER_VOLUME}",dst='/home/wine/.wine' \
+	${MUSIC_FOLDER+--mount type=bind,src="${MUSIC_FOLDER}",dst='/home/wine/Music',ro} \
 	${X11_SOCKET_DIRECTORY+ \
 		--env DISPLAY="${DISPLAY}" \
 		--mount type=bind,src="${X11_SOCKET_DIRECTORY}",dst='/tmp/.X11-unix',ro \
-		--env XAUTHORITY='/home/winamp/.Xauthority' \
-		--mount type=bind,src="${XAUTHORITY_FILE}",dst='/home/winamp/.Xauthority',ro \
+		--env XAUTHORITY='/home/wine/.Xauthority' \
+		--mount type=bind,src="${XAUTHORITY_FILE}",dst='/home/wine/.Xauthority',ro \
 		${DEVICE_DRI+--device "${DEVICE_DRI}":'/dev/dri':r} \
 		${DEVICE_NVIDIACTL+--device "${DEVICE_NVIDIACTL}":'/dev/nvidiactl':r} \
 		${DEVICE_NVIDIA0+--device "${DEVICE_NVIDIA0}":'/dev/nvidia0':r} \

@@ -10,7 +10,7 @@ RUN export DEBIAN_FRONTEND=noninteractive \
 		curl \
 		gnupg \
 	&& dpkg --add-architecture i386 \
-	&& curl -fsSL 'https://dl.winehq.org/wine-builds/Release.key' | apt-key add - \
+	&& curl -fsSL 'https://dl.winehq.org/wine-builds/winehq.key' | apt-key add - \
 	&& printf '%s\n' 'deb https://dl.winehq.org/wine-builds/ubuntu/ bionic main' > /etc/apt/sources.list.d/wine.list \
 	&& printf '%s\n' 'ttf-mscorefonts-installer msttcorefonts/accepted-mscorefonts-eula select true' | debconf-set-selections \
 	&& apt-get update \

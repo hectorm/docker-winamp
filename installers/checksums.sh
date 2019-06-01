@@ -1,6 +1,7 @@
 #!/bin/sh
 
 set -eu
+export LC_ALL=C
 
 rm -f ./MD5SUMS ./SHA1SUMS ./SHA256SUMS
 find ./ \

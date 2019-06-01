@@ -1,4 +1,4 @@
-FROM ubuntu:18.04
+FROM docker.io/ubuntu:18.04
 
 # Install system packages
 RUN export DEBIAN_FRONTEND=noninteractive \
@@ -41,8 +41,8 @@ ARG WINE_UID=1000
 ARG WINE_GID=1000
 RUN groupadd \
 		--gid "${WINE_GID}" \
-		wine \
-	&& useradd \
+		wine
+RUN useradd \
 		--uid "${WINE_UID}" \
 		--gid wine \
 		--groups audio,video \

@@ -37,16 +37,17 @@ RUN mkdir /tmp/.X11-unix \
 	&& chown root /tmp/.X11-unix
 
 # Create wine group and user
-ARG WINE_UID=1000
-ARG WINE_GID=1000
+ARG WINE_USER_UID=1000
+ARG WINE_USER_GID=1000
 RUN groupadd \
-		--gid "${WINE_GID}" \
+		--gid "${WINE_USER_GID}" \
 		wine
 RUN useradd \
-		--uid "${WINE_UID}" \
-		--gid wine \
+		--uid "${WINE_USER_UID}" \
+		--gid "${WINE_USER_GID}" \
 		--groups audio,video \
-		--home-dir /home/wine \
+		--shell "$(command -v bash)" \
+		--home-dir /home/wine/ \
 		--create-home \
 		wine
 
